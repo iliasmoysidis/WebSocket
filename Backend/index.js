@@ -1,8 +1,5 @@
 const PORT = 3000;
-const CONNECTED_USERS = [];
-const LOGGED_USERS = new Map();
-
-const users = { public: [], authenticated: new Map() };
+const users = { public: new Set(), authenticated: new Map() };
 
 const express = require("express");
 const app = express();
@@ -15,16 +12,13 @@ const io = require("socket.io")(server, {
 });
 
 function addPublicUser(socket) {
+  users.public.add(socket);
   console.log(`User ${socket.id} connected`);
-  users.public.push(socket);
 }
 
 function removePublicUser(socket) {
-  const index = users.public.findIndex((u) => u.id === socket.id);
-  if (index !== -1) {
-    users.public.splice(index, 1);
-    console.log(`User ${socket.id} disconnected`);
-  }
+  users.public.delete(socket);
+  console.log(`User ${socket.id} disconnected`);
 }
 
 function addAuthenticatedUser(socket, email) {
@@ -32,14 +26,13 @@ function addAuthenticatedUser(socket, email) {
   console.log(`User with email ${email} has logged in`);
 }
 
-function removeAuthenticatedUser(userEmail) {
-  for (let [socket, email] of LOGGED_USERS.entries()) {
-    if (email === userEmail) {
-      users.authenticated.delete(socket);
-      console.log(`User with email ${email} has logged out`);
-      break;
-    }
-  }
+function removeAuthenticatedUser(socket) {
+  users.authenticated.delete(socket);
+}
+
+function removeUser(socket) {
+  removePublicUser(socket);
+  users.authenticated.delete(socket);
 }
 
 server.listen(PORT, () => {
@@ -74,15 +67,16 @@ io.on("connect", (socket) => {
   addPublicUser(socket);
 
   socket.on("disconnect", () => {
-    removePublicUser(socket);
+    removeUser(socket);
   });
 
   socket.on("login", (email) => {
     addAuthenticatedUser(socket, email);
+    removePublicUser(socket);
   });
 
-  socket.on("logout", (email) => {
-    removeAuthenticatedUser(email);
-    removePublicUser(socket);
+  socket.on("logout", () => {
+    removeAuthenticatedUser(socket);
+    addPublicUser(socket);
   });
 });
