@@ -1,15 +1,31 @@
 import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
 import { Socket } from 'ngx-socket-io';
+import { map } from 'rxjs';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.css',
+  styleUrls: ['./app.component.css'],
 })
 export class AppComponent {
   title = 'Frontend';
+  email = '';
 
   constructor(private socket: Socket) {}
+
+  ngOnInit() {
+    // this.socket.on('connect', () => {});
+  }
+
+  onSubmit() {
+    // this.socket.on('connect', () => {});
+  }
+
+  ngOnDestroy() {
+    this.socket.on('disconnect', () => {});
+  }
+
+  logIn(email: string) {
+    this.socket.emit(email);
+  }
 }
