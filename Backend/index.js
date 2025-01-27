@@ -5,12 +5,8 @@ const app = express();
 const server = require("http").createServer(app);
 const io = require("socket.io")(server, { cors: { origin: "*" } });
 
-app.get("/test", (req, res) => {
-  res.json({ ok: true });
-});
-
-app.get("/greet/:name", (req, res) => {
-  res.json({ greeting: `Hello ${req.params.name}!` });
+io.on("connect", (socket) => {
+  console.log(`User ${socket.id} connected`);
 });
 
 app.listen(PORT, () => {
