@@ -12,27 +12,27 @@ const io = require("socket.io")(server, {
 });
 
 function addPublicUser(socket) {
-  users.public.add(socket);
+  users.public.add(socket.id);
   console.log(`User ${socket.id} connected`);
 }
 
 function removePublicUser(socket) {
-  users.public.delete(socket);
+  users.public.delete(socket.id);
   console.log(`User ${socket.id} disconnected`);
 }
 
 function addAuthenticatedUser(socket, email) {
-  users.authenticated.set(socket, email);
-  console.log(`User with email ${email} has logged in`);
+  users.authenticated.set(socket.id, email);
+  console.log(`User ${socket.id} with email ${email} has logged in`);
 }
 
 function removeAuthenticatedUser(socket) {
-  users.authenticated.delete(socket);
+  users.authenticated.delete(socket.id);
 }
 
 function removeUser(socket) {
-  removePublicUser(socket);
-  users.authenticated.delete(socket);
+  removePublicUser(socket.id);
+  users.authenticated.delete(socket.id);
 }
 
 server.listen(PORT, () => {
@@ -43,9 +43,9 @@ app.post("/callback", (req, res) => {
   const { userEmail, url } = req.body;
 
   let userFound = false;
-  for (let [socket, email] of users.authenticated.entries()) {
+  for (let [socketId, email] of users.authenticated.entries()) {
     if (userEmail === email) {
-      const targetSocket = io.sockets.sockets.get(socket.id);
+      const targetSocket = io.sockets.sockets.get(socketId);
       targetSocket.emit("url", url);
       userFound = true;
       break;
